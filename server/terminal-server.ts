@@ -108,10 +108,6 @@ async function proxySearch(query: string, maxResults: number): Promise<SearchRes
       if (uddg) url = decodeURIComponent(uddg[1]);
     }
 
-    const snippetRegex = new RegExp(
-      `class="result__snippet"[^>]*>(.*?)</a>`,
-      's'
-    );
     const blockStart = Math.max(0, match.index - 2000);
     const block = html.slice(blockStart, match.index + 500);
     const snippetMatch = block.match(/class="result__snippet"[^>]*>([\s\S]*?)<\/a>/);
@@ -220,7 +216,7 @@ async function proxyFetch(targetUrl: string, maxLength: number): Promise<{ conte
   }
 }
 
-const server = Bun.serve({
+Bun.serve({
   port: PORT,
   async fetch(req) {
     const corsHeaders = {

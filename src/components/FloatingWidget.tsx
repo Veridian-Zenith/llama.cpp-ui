@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ChevronDown, ChevronUp, Gauge, Zap, Clock, Database,
-  Brain, Activity, Sparkles,
+  ChevronUp, Gauge, Zap, Clock, Database,
+  Brain, Activity,
 } from 'lucide-react';
 import { useStore } from '../lib/store';
 import { memoryStore } from '../lib/memory';

@@ -21,7 +21,7 @@ export function Assistant() {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
   const {
-    isConnected, isStreaming, messages, agenticMode,
+    isConnected, messages, agenticMode,
     serverCapabilities,
   } = useStore();
 
@@ -112,7 +112,7 @@ export function Assistant() {
 
     // Filter out dismissed
     return newSuggestions.filter((s) => !dismissed.has(s.id));
-  }, [isConnected, isStreaming, messages, agenticMode, serverCapabilities, dismissed]);
+  }, [isConnected, messages, agenticMode, serverCapabilities, dismissed]);
 
   useEffect(() => {
     setSuggestions(generateSuggestions());

@@ -14,7 +14,11 @@ import { useStore } from './lib/store';
 export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const { connect, settings, chats, switchChat, terminalOpen } = useStore();
+  const connect = useStore((state) => state.connect);
+  const settings = useStore((state) => state.settings);
+  const chats = useStore((state) => state.chats);
+  const switchChat = useStore((state) => state.switchChat);
+  const terminalOpen = useStore((state) => state.terminalOpen);
 
   useEffect(() => {
     connect(settings.serverUrl);
@@ -22,7 +26,7 @@ export default function App() {
     if (savedId && chats.find((c) => c.id === savedId)) {
       switchChat(savedId);
     }
-  }, []);
+  }, [connect, settings.serverUrl, chats, switchChat]);
 
   return (
     <div className="h-screen flex flex-col bg-[var(--vz-bg-primary)] text-[var(--vz-text-secondary)] overflow-hidden relative">
