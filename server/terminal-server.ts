@@ -1,6 +1,8 @@
 import { mkdir, writeFile, readFile } from 'fs/promises';
 import { existsSync } from 'fs';
 import { dirname } from 'path';
+import sanitizeHtml from 'sanitize-html';
+import { convert } from 'html-to-text';
 
 const PORT = 8081;
 
@@ -101,7 +103,7 @@ async function proxySearch(query: string, maxResults: number): Promise<SearchRes
 
   while ((match = linkRegex.exec(html)) !== null && count < maxResults) {
     let url = match[1];
-    const title = match[2].replace(/<[^>]+>/g, '').trim();
+    const title = convert(match[2], { wordwrap: false }).trim();
 
     if (url.includes('uddg=')) {
       const uddg = url.match(/uddg=([^&]+)/);
@@ -112,7 +114,7 @@ async function proxySearch(query: string, maxResults: number): Promise<SearchRes
     const block = html.slice(blockStart, match.index + 500);
     const snippetMatch = block.match(/class="result__snippet"[^>]*>([\s\S]*?)<\/a>/);
     const snippet = snippetMatch
-      ? snippetMatch[1].replace(/<[^>]+>/g, '').trim()
+      ? convert(snippetMatch[1], { wordwrap: false }).trim()
       : '';
 
     if (title || url) {
@@ -163,18 +165,23 @@ async function proxyFetch(targetUrl: string, maxLength: number): Promise<{ conte
 
     // HTML - extract meaningful content
     // Remove scripts, styles, nav, header, footer, aside
-    let html = body
-      .replace(/<script[\s\S]*?<\/script>/gi, '')
-      .replace(/<style[\s\S]*?<\/style>/gi, '')
-      .replace(/<noscript[\s\S]*?<\/noscript>/gi, '')
-      .replace(/<nav[\s\S]*?<\/nav>/gi, '')
-      .replace(/<header[\s\S]*?<\/header>/gi, '')
-      .replace(/<footer[\s\S]*?<\/footer>/gi, '')
-      .replace(/<aside[\s\S]*?<\/aside>/gi, '');
+    let html = sanitizeHtml(body, {
+      allowedTags: ['main', 'article', 'section', 'div', 'body', 'title', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'a', 'ul', 'li', 'ol', 'table', 'tr', 'td', 'th', 'thead', 'tbody', 'em', 'strong'],
+      allowedAttributes: { '*': ['class'] },
+      exclusiveFilter: {
+        script: () => true,
+        style: () => true,
+        noscript: () => true,
+        nav: () => true,
+        header: () => true,
+        footer: () => true,
+        aside: () => true,
+      },
+    });
 
     // Extract title
     const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
-    const title = titleMatch ? titleMatch[1].replace(/<[^>]+>/g, '').trim() : '';
+    const title = titleMatch ? convert(titleMatch[1], { wordwrap: false }).trim() : '';
 
     // Try semantic content containers first (like odysseus)
     const semanticPatterns = [
@@ -186,7 +193,7 @@ async function proxyFetch(targetUrl: string, maxLength: number): Promise<{ conte
     for (const pattern of semanticPatterns) {
       let match;
       while ((match = pattern.exec(html)) !== null) {
-        const text = match[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+        const text = convert(match[1], { wordwrap: false }).replace(/\s+/g, ' ').trim();
         if (text.length > mainContent.length) {
           mainContent = text;
         }
@@ -198,13 +205,13 @@ async function proxyFetch(targetUrl: string, maxLength: number): Promise<{ conte
     if (mainContent.length < 600) {
       const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
       if (bodyMatch) {
-        mainContent = bodyMatch[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+        mainContent = convert(bodyMatch[1], { wordwrap: false }).replace(/\s+/g, ' ').trim();
       }
     }
 
     // Last resort: strip all tags
     if (!mainContent) {
-      mainContent = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+      mainContent = convert(html, { wordwrap: false }).replace(/\s+/g, ' ').trim();
     }
 
     // Prepend title
