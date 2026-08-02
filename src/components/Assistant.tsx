@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Sparkles, X, ChevronRight, Brain, Terminal,
@@ -18,7 +18,6 @@ interface Suggestion {
 
 export function Assistant() {
   const [isOpen, setIsOpen] = useState(false);
-  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
   const {
     isConnected, messages, agenticMode,
@@ -114,9 +113,7 @@ export function Assistant() {
     return newSuggestions.filter((s) => !dismissed.has(s.id));
   }, [isConnected, messages, agenticMode, serverCapabilities, dismissed]);
 
-  useEffect(() => {
-    setSuggestions(generateSuggestions());
-  }, [generateSuggestions]);
+  const suggestions = useMemo(() => generateSuggestions(), [generateSuggestions]);
 
   const dismiss = (id: string) => {
     setDismissed((prev) => new Set(prev).add(id));

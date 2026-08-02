@@ -26,7 +26,8 @@ export default function App() {
     if (savedId && chats.find((c) => c.id === savedId)) {
       switchChat(savedId);
     }
-  }, [connect, settings.serverUrl, chats, switchChat]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run only on mount
 
   return (
     <div className="h-screen flex flex-col bg-[var(--vz-bg-primary)] text-[var(--vz-text-secondary)] overflow-hidden relative">
