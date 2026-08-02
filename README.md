@@ -10,7 +10,8 @@ To run this application, you need to have a `llama.cpp` server (`llama-server`) 
 Download the required model file using the `hf` (Hugging Face) CLI tool:
 
 ```bash
-hf download google/gemma-4-E2B-it-qat-q4_0-gguf --local-dir gemma-4-E2B-it-qat-q4_0-gguf
+mkdir ~/llama
+hf download google/gemma-4-E2B-it-qat-q4_0-gguf --local-dir ~/llama/gemma-4-E2B-it-qat-q4_0-gguf
 ```
 
 ### 2. Run the `llama-server`
@@ -18,7 +19,7 @@ Launch the `llama-server` with the following command, ensuring the path to the m
 
 ```bash
 llama-server \
-  --model /path/to/your/downloaded/gemma-4-E2B_q4_0-it.gguf \
+  --model ~/llama/gemma-4-E2B-it-qat-q4_0-gguf/gemma-4-E2B_q4_0-it.gguf \
   -ngl 10 \
   -c 76800 \
   -ctk q4_0 \
@@ -32,6 +33,7 @@ llama-server \
 Once the backend is running, start the frontend application:
 
 ```bash
+bun i
 bun run start
 ```
 
