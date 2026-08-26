@@ -15,7 +15,7 @@ interface Props {
 
 export function TerminalPanel({ isOpen, onClose }: Props) {
   const [lines, setLines] = useState<TerminalLine[]>([
-    { type: 'output', content: 'Terminal session started. Type commands below.', timestamp: Date.now() },
+    { type: 'output', content: 'Terminal session started. Type commands below.', timestamp: 0 },
   ]);
   const [input, setInput] = useState('');
   const [isRunning, setIsRunning] = useState(false);

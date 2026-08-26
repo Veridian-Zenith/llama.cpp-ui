@@ -58,7 +58,10 @@ export function WeatherWidget() {
   };
 
   useEffect(() => {
-    fetchWeather();
+    const timeout = setTimeout(() => {
+      fetchWeather();
+    }, 0);
+    return () => clearTimeout(timeout);
   }, []);
 
   return (

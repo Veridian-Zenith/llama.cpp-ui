@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   MessageSquare, Plus, Trash2, Edit3, Check, X, Clock, Search,
@@ -24,6 +24,17 @@ export function LeftPanel({ onOpenSettings: _onOpenSettings }: Props) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [now, setNow] = useState(0);
+
+  useEffect(() => {
+    const tick = () => setNow(Date.now());
+    const timeout = setTimeout(tick, 0);
+    const interval = setInterval(tick, 30000);
+    return () => {
+      clearTimeout(timeout);
+      clearInterval(interval);
+    };
+  }, []);
 
   const filtered = searchQuery ? chatStore.search(searchQuery) : chats;
 
@@ -38,7 +49,7 @@ export function LeftPanel({ onOpenSettings: _onOpenSettings }: Props) {
   };
 
   const formatTime = (ts: number) => {
-    const diffMs = Date.now() - ts;
+    const diffMs = now - ts;
     const mins = Math.floor(diffMs / 60000);
     if (mins < 1) return 'now';
     if (mins < 60) return `${mins}m`;

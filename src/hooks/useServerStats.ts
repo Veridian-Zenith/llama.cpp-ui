@@ -79,9 +79,12 @@ export function useServerStats(serverUrl: string, isConnected: boolean) {
 
   useEffect(() => {
     if (!isConnected) return;
-    fetchSlots();
+    const timeout = setTimeout(fetchSlots, 0);
     const interval = setInterval(fetchSlots, 2000);
-    return () => clearInterval(interval);
+    return () => {
+      clearTimeout(timeout);
+      clearInterval(interval);
+    };
   }, [isConnected, fetchSlots]);
 
   const updateTokenStats = useCallback(
