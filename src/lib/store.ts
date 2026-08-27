@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import { LlamaClient, type ChatMessage, type CompletionRequest, type ServerCapabilities, type NativeToolDefinition } from './llama-client';
-import { type ToolCall, type SandboxConfig, getToolByName, TOOL_DEFINITIONS } from './tools/types';
+import { LlamaClient, type ChatMessage, type CompletionRequest, type ServerCapabilities } from './llama-client';
+import { type ToolCall, type SandboxConfig, getToolByName } from './tools/types';
 import { DEFAULT_SANDBOX } from './tools/types';
 import { executeTool } from './tools/executor';
 import { buildToolingSystemPrompt, type AgenticMode } from './agentic';
@@ -8,6 +8,7 @@ import { type PersonalityMode, buildPersonalityPrompt } from './personality';
 import { chatStore, type ChatConversation } from './chat-store';
 import { profileStore } from './profile';
 import { memoryStore } from './memory';
+import { DEFAULT_LLAMA_URL } from './config';
 
 export interface Settings {
   temperature: number;
@@ -167,7 +168,7 @@ export const useStore = create<AppState>((set, get) => ({
     frequency_penalty: 0.0,
     presence_penalty: 0.0,
     systemPrompt: 'You are a helpful assistant with access to tools and the internet.',
-    serverUrl: 'http://127.0.0.1:8080',
+    serverUrl: DEFAULT_LLAMA_URL,
     seed: -1,
     personalityMode: 'sidekick',
   },
@@ -325,35 +326,6 @@ export const useStore = create<AppState>((set, get) => ({
     ];
 
     const caps = get().serverCapabilities;
-    const useNativeTools = agenticMode !== 'chat' && caps?.supportsNativeTools;
-
-    // Build native tool definitions if server supports them
-    let nativeTools: NativeToolDefinition[] | undefined;
-    if (useNativeTools) {
-      nativeTools = TOOL_DEFINITIONS.map((t) => ({
-        type: 'function' as const,
-        function: {
-          name: t.name,
-          description: t.description,
-          parameters: {
-            type: 'object' as const,
-            properties: Object.fromEntries(
-              Object.entries(t.parameters).map(([k, p]) => [
-                k,
-                {
-                  type: p.type,
-                  description: p.description,
-                  ...(p.enum ? { enum: p.enum } : {}),
-                },
-              ])
-            ),
-            required: Object.entries(t.parameters)
-              .filter(([, p]) => p.required)
-              .map(([k]) => k),
-          },
-        },
-      }));
-    }
 
     const req: CompletionRequest = {
       messages: apiMessages,
@@ -366,13 +338,13 @@ export const useStore = create<AppState>((set, get) => ({
       presence_penalty: settings.presence_penalty,
       stream: true,
       seed: settings.seed >= 0 ? settings.seed : undefined,
-      // Use native tools if server supports them
-      ...(nativeTools ? { tools: nativeTools, tool_choice: 'auto' as const } : {}),
+
       // Enable MiRoC caching if available
       ...(caps?.supportsMiRoC ? { cache_prompt: true } : {}),
     };
 
     abortController = new AbortController();
+    const signal = abortController.signal;
 
     try {
       let fullContent = '';
@@ -382,8 +354,8 @@ export const useStore = create<AppState>((set, get) => ({
       // Track native tool calls from streaming response
       const nativeToolCalls = new Map<number, { id: string; name: string; arguments: string }>();
 
-      for await (const chunk of client.streamCompletion(req)) {
-        if (abortController?.signal.aborted) break;
+      for await (const chunk of client.streamCompletion(req, signal)) {
+        if (signal.aborted) break;
 
         const delta = chunk.choices[0]?.delta;
         const reasoningDelta = delta?.reasoning_content;
@@ -574,8 +546,8 @@ export const useStore = create<AppState>((set, get) => ({
 
           const followUpId = `msg-${Date.now()}-followup`;
           let followUpContent = '';
-          for await (const chunk of client.streamCompletion({ ...req, messages: followUpMessages })) {
-            if (abortController?.signal.aborted) break;
+          for await (const chunk of client.streamCompletion({ ...req, messages: followUpMessages }, signal)) {
+            if (signal.aborted) break;
             const delta = chunk.choices[0]?.delta?.content;
             if (delta) {
               followUpContent += delta;
@@ -635,7 +607,6 @@ export const useStore = create<AppState>((set, get) => ({
 
   stopStreaming: () => {
     abortController?.abort();
-    abortController = null;
     set({ isStreaming: false });
   },
 

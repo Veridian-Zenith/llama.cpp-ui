@@ -25,8 +25,6 @@ function buildToolGuide(): string {
     lines.push(`- ${tool.name}: ${tool.description.split('.')[0]}. Params: ${params || 'none'}`);
   }
 
-  lines.push('');
-  lines.push('Tips: web_search for facts, terminal for commands, file_read/write for files, memory_* for persistence, code_analyze for LSP diagnostics, code_run for exec, diagram for mermaid.');
   return lines.join('\n');
 }
 

@@ -335,12 +335,14 @@ export class LlamaClient {
   }
 
   async *streamCompletion(
-    request: CompletionRequest
+    request: CompletionRequest,
+    signal?: AbortSignal
   ): AsyncGenerator<CompletionChunk> {
     const res = await fetch(`${this.baseUrl}/v1/chat/completions`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ...request, stream: true }),
+      signal,
     });
 
     if (!res.ok) {
@@ -354,25 +356,31 @@ export class LlamaClient {
     const decoder = new TextDecoder();
     let buffer = '';
 
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
+    try {
+      while (true) {
+        if (signal?.aborted) { reader.cancel(); return; }
+        const { done, value } = await reader.read();
+        if (done) break;
 
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split('\n');
-      buffer = lines.pop() || '';
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
 
-      for (const line of lines) {
-        if (line.startsWith('data: ')) {
-          const data = line.slice(6);
-          if (data === '[DONE]') return;
-          try {
-            yield JSON.parse(data);
-          } catch {
-            // skip malformed chunks
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6);
+            if (data === '[DONE]') return;
+            try {
+              yield JSON.parse(data);
+            } catch {
+              // skip malformed chunks
+            }
           }
         }
       }
+    } catch (e) {
+      if (signal?.aborted) return;
+      throw e;
     }
   }
 
