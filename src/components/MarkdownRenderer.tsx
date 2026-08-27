@@ -7,6 +7,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Copy, Check, ChevronDown, Brain } from 'lucide-react';
 import { parseThinking, type ThinkingBlock } from '../lib/thinking-parser';
+import 'highlight.js/styles/github-dark.css';
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);

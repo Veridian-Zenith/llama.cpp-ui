@@ -14,4 +14,26 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    chunkSizeWarningLimit: 600,
+    cssCodeSplit: true,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('framer-motion')) return 'framer'
+            if (
+              id.includes('highlight.js') ||
+              id.includes('rehype-highlight') ||
+              id.includes('rehype-raw') ||
+              id.includes('remark-gfm') ||
+              id.includes('react-markdown')
+            )
+              return 'markdown'
+            if (id.includes('lucide-react')) return 'icons'
+          }
+        },
+      },
+    },
+  },
 })

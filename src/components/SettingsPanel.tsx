@@ -23,17 +23,17 @@ function SliderField({
 }) {
   return (
     <div className="space-y-1.5">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1.5">
-          <Icon size={11} className="text-[var(--vz-accent-vibrant)]/50" />
-          <span className="text-[10px] font-mono text-[var(--vz-text-secondary)]/60 uppercase tracking-wider">{label}</span>
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <Icon size={11} className="text-[var(--vz-accent-vibrant)]/50 shrink-0 w-[clamp(10px,1vw,11px)] h-[clamp(10px,1vw,11px)]" />
+          <span className="text-[clamp(9px,0.9vw,10px)] font-mono text-[var(--vz-text-secondary)]/60 uppercase tracking-wider truncate">{label}</span>
         </div>
-        <span className="text-[10px] font-mono text-[var(--vz-accent-vibrant)]">{value}</span>
+        <span className="text-[clamp(9px,0.9vw,10px)] font-mono text-[var(--vz-accent-vibrant)] shrink-0">{value}</span>
       </div>
       <input
         type="range" min={min} max={max} step={step} value={value}
         onChange={(e) => onChange(parseFloat(e.target.value))}
-        className="w-full h-1.5 rounded-full appearance-none cursor-pointer bg-[var(--vz-bg-tertiary)] border border-[var(--vz-border-color)]/30 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[var(--vz-accent-vibrant)] [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-[var(--vz-bg-primary)] [&::-webkit-slider-thumb]:shadow-[0_0_10px_rgba(255,45,45,0.4)]"
+        className="w-full h-1.5 rounded-full appearance-none cursor-pointer bg-[var(--vz-bg-tertiary)] border border-[var(--vz-border-color)]/30 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[var(--vz-accent-vibrant)] [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-[var(--vz-bg-primary)] [&::-webkit-slider-thumb]:shadow-[0_0_10px_rgba(255,45,45,0.4)] touch-manipulation"
       />
     </div>
   );
@@ -52,8 +52,16 @@ interface Props {
   onClose: () => void;
 }
 
+const ATMOSPHERES = [
+  { id: '', label: 'Blood Moon', color: '#FF2D2D', desc: 'Default red' },
+  { id: 'atmosphere-amber', label: 'Amber', color: '#FFB347', desc: 'vzdev classic' },
+  { id: 'atmosphere-midnight-void', label: 'Midnight Void', color: '#818cf8', desc: 'Indigo' },
+  { id: 'atmosphere-golden-zenith', label: 'Golden Zenith', color: '#FFD700', desc: 'Gold' },
+];
+
 export function SettingsPanel({ onClose }: Props) {
   const [activeTab, setActiveTab] = useState('connection');
+  const [atmosphere, setAtmosphere] = useState(() => localStorage.getItem('llamacpp-atmosphere') || '');
   const {
     settings, updateSettings, connect, isConnected, currentModel,
     sandbox, updateSandbox,
@@ -61,66 +69,74 @@ export function SettingsPanel({ onClose }: Props) {
   } = useStore();
   const [urlInput, setUrlInput] = useState(settings.serverUrl);
 
+  const switchAtmosphere = (id: string) => {
+    document.documentElement.classList.remove('atmosphere-amber','atmosphere-midnight-void','atmosphere-golden-zenith');
+    if (id) document.documentElement.classList.add(id);
+    localStorage.setItem('llamacpp-atmosphere', id);
+    setAtmosphere(id);
+  };
+
   return (
     <div className="h-full flex bg-[var(--vz-bg-primary)] noise-overlay">
-      {/* Vertical nav rail */}
-      <div className="w-[180px] shrink-0 border-r border-[var(--vz-border-color)]/20 flex flex-col bg-[var(--vz-bg-secondary)]/30">
+      {/* Vertical nav rail — fluid */}
+      <div className="w-[clamp(140px,18vw,180px)] shrink-0 border-r border-[var(--vz-border-color)]/20 flex flex-col bg-[var(--vz-bg-secondary)]/30">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--vz-border-color)]/15 shrink-0">
-          <span className="text-[11px] font-bold uppercase tracking-wider gradient-text">Settings</span>
-          <motion.button whileHover={{ scale: 1.1, rotate: 90 }} whileTap={{ scale: 0.9 }}
-            onClick={onClose} className="p-1 rounded-lg hover:bg-white/5 text-[var(--vz-text-secondary)]/30 hover:text-[var(--vz-accent-vibrant)] transition-all cursor-pointer">
-            <X size={14} />
+        <div className="flex items-center justify-between px-[clamp(10px,1vw,16px)] py-3 border-b border-[var(--vz-border-color)]/15 shrink-0">
+          <span className="text-[clamp(10px,1vw,11px)] font-bold uppercase tracking-wider gradient-themeable">Settings</span>
+          <motion.button whileTap={{ scale: 0.9 }}
+            onClick={onClose} className="p-1 rounded-lg hover:bg-white/5 text-[var(--vz-text-secondary)]/30 hover:text-[var(--vz-accent-vibrant)] transition-colors cursor-pointer">
+            <X size={14} className="w-[clamp(12px,1.2vw,14px)] h-[clamp(12px,1.2vw,14px)]" />
           </motion.button>
         </div>
 
         {/* Nav items */}
-        <nav className="flex-1 py-2 px-2 space-y-0.5 overflow-y-auto scrollbar-hide">
+        <nav className="flex-1 py-2 px-1.5 sm:px-2 space-y-0.5 overflow-y-auto scrollbar-hide">
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
             const active = activeTab === item.id;
             return (
               <motion.button
                 key={item.id}
-                whileHover={{ x: 2 }} whileTap={{ scale: 0.98 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => setActiveTab(item.id)}
-                className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left transition-all cursor-pointer relative ${
+                className={`w-full flex items-center gap-2 sm:gap-2.5 px-2 sm:px-3 py-2 sm:py-2.5 rounded-xl text-left transition-colors cursor-pointer relative ${
                   active
                     ? 'bg-[var(--vz-accent-vibrant)]/10 text-[var(--vz-accent-vibrant)] sidebar-active'
                     : 'text-[var(--vz-text-secondary)]/35 hover:text-[var(--vz-text-secondary)]/60 hover:bg-white/[0.02]'
                 }`}
               >
-                <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
+                <div className={`w-[clamp(24px,3vw,28px)] h-[clamp(24px,3vw,28px)] rounded-lg flex items-center justify-center shrink-0 ${
                   active ? 'bg-[var(--vz-accent-vibrant)]/15' : 'bg-white/[0.03]'
                 }`}>
-                  <Icon size={13} />
+                  <Icon size={13} className="w-[clamp(11px,1.2vw,13px)] h-[clamp(11px,1.2vw,13px)]" />
                 </div>
-                <div className="min-w-0">
-                  <div className={`text-[10px] font-bold ${active ? '' : ''}`}>{item.label}</div>
-                  <div className="text-[8px] text-[var(--vz-text-secondary)]/20 truncate">{item.desc}</div>
+                <div className="min-w-0 hidden sm:block">
+                  <div className="text-[clamp(9px,0.9vw,10px)] font-bold">{item.label}</div>
+                  <div className="text-[clamp(7px,0.8vw,8px)] text-[var(--vz-text-secondary)]/20 truncate">{item.desc}</div>
                 </div>
+                <span className="sm:hidden text-[clamp(9px,0.9vw,10px)] font-bold truncate">{item.label}</span>
               </motion.button>
             );
           })}
         </nav>
 
         {/* Footer */}
-        <div className="px-4 py-3 border-t border-[var(--vz-border-color)]/15 shrink-0">
-          <div className={`flex items-center gap-1.5 text-[9px] font-mono ${isConnected ? 'text-green-400/60' : 'text-red-400/60'}`}>
-            <div className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`} />
+        <div className="px-3 sm:px-4 py-3 border-t border-[var(--vz-border-color)]/15 shrink-0">
+          <div className={`flex items-center gap-1.5 text-[clamp(8px,0.9vw,9px)] font-mono ${isConnected ? 'text-green-400/60' : 'text-red-400/60'}`}>
+            <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${isConnected ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`} />
             {isConnected ? 'Connected' : 'Offline'}
           </div>
         </div>
       </div>
 
-      {/* Content area */}
+      {/* Content area — fluid padding */}
       <div className="flex-1 overflow-y-auto scrollbar-hide">
         <AnimatePresence mode="wait">
           {activeTab === 'connection' && (
             <motion.div key="connection"
-              initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }}
-              transition={{ duration: 0.2 }}
-              className="p-5 space-y-5"
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className="p-[clamp(12px,1.8vw,20px)] space-y-[clamp(16px,2vw,20px)]"
             >
               <SectionHeader title="Server Connection" subtitle="Connect to your llama-server instance" />
 
@@ -162,6 +178,23 @@ export function SettingsPanel({ onClose }: Props) {
               </div>
 
               <div className="max-w-lg">
+                <SectionHeader title="Atmosphere" subtitle="vzdev-inspired theme — blends with your site" />
+                <div className="grid grid-cols-2 gap-2">
+                  {ATMOSPHERES.map(a => (
+                    <button key={a.id || 'default'} onClick={() => switchAtmosphere(a.id)}
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border text-left transition-all ${atmosphere===a.id ? 'bg-[var(--vz-accent-vibrant)]/10 border-[var(--vz-accent-vibrant)]/30 shadow-glow-themeable' : 'bg-[var(--vz-bg-secondary)] border-[var(--vz-border-color)]/20 hover:border-[var(--vz-accent-vibrant)]/20'}`}>
+                      <span className="w-3 h-3 rounded-full shrink-0" style={{ background: a.color, boxShadow: `0 0 10px ${a.color}` }} />
+                      <span className="min-w-0">
+                        <span className="block text-xs font-bold text-[var(--vz-text-secondary)]">{a.label}</span>
+                        <span className="block text-[10px] text-[var(--vz-text-secondary)]/40">{a.desc}</span>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+                <p className="text-[11px] text-[var(--vz-text-secondary)]/30 mt-2">Inspired by <span className="text-primary-themeable">vzdev.indevs.in</span> — amber default, midnight void, golden zenith.</p>
+              </div>
+
+              <div className="max-w-lg">
                 <SectionHeader title="Live Stats" subtitle="Real-time server performance" />
                 <StatsPanel />
               </div>
@@ -177,7 +210,7 @@ export function SettingsPanel({ onClose }: Props) {
             <motion.div key="model"
               initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }}
               transition={{ duration: 0.2 }}
-              className="p-5 space-y-5"
+              className="p-[clamp(12px,1.8vw,20px)] space-y-[clamp(16px,2vw,20px)]"
             >
               <SectionHeader title="Model Configuration" subtitle="Fine-tune generation parameters" />
 
@@ -234,7 +267,7 @@ export function SettingsPanel({ onClose }: Props) {
             <motion.div key="personality"
               initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }}
               transition={{ duration: 0.2 }}
-              className="p-5 space-y-5"
+              className="p-[clamp(12px,1.8vw,20px)] space-y-[clamp(16px,2vw,20px)]"
             >
               <SectionHeader title="Personality" subtitle="Choose how the assistant behaves" />
 
@@ -283,7 +316,7 @@ export function SettingsPanel({ onClose }: Props) {
             <motion.div key="tools"
               initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }}
               transition={{ duration: 0.2 }}
-              className="p-5 space-y-5"
+              className="p-[clamp(12px,1.8vw,20px)] space-y-[clamp(16px,2vw,20px)]"
             >
               <SectionHeader title="Available Tools" subtitle="Tools the model can use" />
 
@@ -329,7 +362,7 @@ export function SettingsPanel({ onClose }: Props) {
             <motion.div key="memory"
               initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }}
               transition={{ duration: 0.2 }}
-              className="p-5"
+              className="p-[clamp(12px,1.8vw,20px)]"
             >
               <SectionHeader title="Memory Store" subtitle="Persistent memories across conversations" />
               <div className="max-w-2xl">
@@ -342,7 +375,7 @@ export function SettingsPanel({ onClose }: Props) {
             <motion.div key="profile"
               initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }}
               transition={{ duration: 0.2 }}
-              className="p-5"
+              className="p-[clamp(12px,1.8vw,20px)]"
             >
               <SectionHeader title="Your Profile" subtitle="Personalize your identity" />
               <div className="max-w-lg">
@@ -358,9 +391,9 @@ export function SettingsPanel({ onClose }: Props) {
 
 function SectionHeader({ title, subtitle }: { title: string; subtitle: string }) {
   return (
-    <div className="mb-4">
-      <h2 className="text-[13px] font-bold text-[var(--vz-text-secondary)]/80">{title}</h2>
-      <p className="text-[9px] font-mono text-[var(--vz-text-secondary)]/25 mt-0.5">{subtitle}</p>
+    <div className="mb-3 sm:mb-4">
+      <h2 className="text-[clamp(12px,1.2vw,13px)] font-bold text-[var(--vz-text-secondary)]/80">{title}</h2>
+      <p className="text-[clamp(8px,0.9vw,9px)] font-mono text-[var(--vz-text-secondary)]/25 mt-0.5 break-words">{subtitle}</p>
     </div>
   );
 }
@@ -373,7 +406,7 @@ function CapBadge({ label, color }: { label: string; color: 'vibrant' | 'green' 
     blue: 'bg-blue-500/10 text-blue-400/70 border-blue-500/25',
   };
   return (
-    <span className={`text-[9px] font-mono px-2 py-0.5 rounded-full border ${colors[color]}`}>
+    <span className={`text-[clamp(8px,0.9vw,9px)] font-mono px-2 py-0.5 rounded-full border ${colors[color]}`}>
       {label}
     </span>
   );

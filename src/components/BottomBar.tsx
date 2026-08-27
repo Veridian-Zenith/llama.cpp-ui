@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import {
   Terminal, Brain, Search, Globe, Code,
-  Bot, Sparkles,
+  Sparkles,
 } from 'lucide-react';
 import { useStore } from '../lib/store';
 
@@ -18,74 +18,57 @@ const QUICK_ACTIONS = [
 ];
 
 export function BottomBar({ onOpenSettings }: Props) {
-  const { agenticMode, terminalOpen, setTerminalOpen } = useStore();
-
-  const modeColor: Record<string, string> = {
-    chat: 'text-blue-400 bg-blue-500/10 border-blue-500/20',
-    auto: 'text-green-400 bg-green-500/10 border-green-500/20',
-    manual: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
-    plan: 'text-purple-400 bg-purple-500/10 border-purple-500/20',
-  };
+  const { terminalOpen, setTerminalOpen } = useStore();
 
   return (
-    <div className="shrink-0 relative z-30">
-      {/* Top accent */}
-      <div className="h-px bg-gradient-to-r from-transparent via-[var(--vz-accent-vibrant)]/30 to-transparent" />
+    <div className="shrink-0 px-2 sm:px-3 pb-[clamp(8px,1.5vw,12px)] relative z-30">
+      {/* Pill footer — fluid */}
+      <div className="navbar-custom backdrop-blur-md rounded-full px-2 sm:px-5 py-2 flex items-center gap-1.5 sm:gap-2.5 relative overflow-hidden shadow-[0_10px_40px_rgba(0,0,0,0.4)] w-full max-w-[min(640px,92vw)] mx-auto will-change-transform">
+        <div className="absolute inset-0 bg-gradient-to-r from-[var(--vz-accent-vibrant)]/0 via-[var(--vz-accent-vibrant)]/[0.015] to-[var(--vz-accent-vibrant)]/0 pointer-events-none rounded-full" />
 
-      {/* Main bar */}
-      <div className="bg-gradient-to-r from-[#0a0a0a] via-[#0d0d0d] to-[#0a0a0a] border-t border-[var(--vz-border-color)]/12 px-3 py-2.5 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-[var(--vz-accent-vibrant)]/0 via-[var(--vz-accent-vibrant)]/[0.015] to-[var(--vz-accent-vibrant)]/0 pointer-events-none" />
+        <div className="flex items-center gap-1.5 sm:gap-2.5 relative z-10 flex-1 min-w-0">
 
-        <div className="flex items-center gap-2.5 relative z-10">
-          {/* Mode pill */}
-          <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-2xl border ${modeColor[agenticMode] || ''}`}>
-            <Bot size={10} />
-            <span className="text-[9px] font-black uppercase tracking-widest">{agenticMode}</span>
-          </div>
-
-          <div className="w-px h-5 bg-gradient-to-b from-transparent via-[var(--vz-border-color)]/12 to-transparent" />
-
-          {/* Quick actions */}
-          <div className="flex-1 flex items-center gap-1.5 overflow-x-auto scrollbar-hide">
+          {/* Quick actions — scrollable on narrow, wrap on wide */}
+          <div className="flex-1 flex items-center gap-1 sm:gap-1.5 overflow-x-auto scrollbar-hide min-w-0">
             {QUICK_ACTIONS.map((a) => {
               const Icon = a.icon;
               return (
                 <motion.button
                   key={a.label}
-                  whileHover={{ scale: 1.06, y: -2 }} whileTap={{ scale: 0.94 }}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-2xl ${a.bg} border ${a.border} text-[9px] font-black transition-all cursor-pointer whitespace-nowrap ${a.color} ${a.shadow}`}
+                  whileTap={{ scale: 0.96 }}
+                  className={`flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-2xl ${a.bg} border ${a.border} text-[clamp(8px,0.9vw,9px)] font-black transition-colors cursor-pointer whitespace-nowrap shrink-0 ${a.color} hover:brightness-110`}
                 >
-                  <Icon size={10} />
+                  <Icon size={10} className="w-[clamp(10px,1vw,12px)] h-[clamp(10px,1vw,12px)]" />
                   {a.label}
                 </motion.button>
               );
             })}
           </div>
 
-          <div className="w-px h-5 bg-gradient-to-b from-transparent via-[var(--vz-border-color)]/12 to-transparent" />
+          <div className="hidden sm:block w-px h-5 bg-gradient-to-b from-transparent via-[var(--vz-border-color)]/12 to-transparent shrink-0" />
 
-          {/* Right actions */}
-          <div className="flex items-center gap-1.5 shrink-0">
+          {/* Right actions — fluid */}
+          <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
             <motion.button
-              whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}
+              whileTap={{ scale: 0.96 }}
               onClick={() => setTerminalOpen(!terminalOpen)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-2xl text-[9px] font-black transition-all cursor-pointer border ${
+              className={`flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-2xl text-[clamp(8px,0.9vw,9px)] font-black transition-colors cursor-pointer border shrink-0 ${
                 terminalOpen
-                  ? 'bg-green-500/10 border-green-500/25 text-green-400 shadow-[0_0_12px_rgba(74,222,128,0.1)]'
+                  ? 'bg-green-500/10 border-green-500/25 text-green-400'
                   : 'bg-white/[0.03] border-white/[0.05] text-[var(--vz-text-secondary)]/30 hover:text-green-400/60 hover:border-green-500/15'
               }`}
             >
-              <Terminal size={10} />
-              Terminal
+              <Terminal size={10} className="w-[clamp(10px,1vw,12px)] h-[clamp(10px,1vw,12px)]" />
+              <span className="hidden xs:inline">Terminal</span>
             </motion.button>
 
             <motion.button
-              whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}
+              whileTap={{ scale: 0.96 }}
               onClick={onOpenSettings}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-white/[0.03] border border-white/[0.05] text-[9px] font-black text-[var(--vz-text-secondary)]/30 hover:text-[var(--vz-accent-vibrant)]/70 hover:border-[var(--vz-accent-vibrant)]/15 hover:shadow-[0_0_12px_rgba(255,45,45,0.08)] transition-all cursor-pointer"
+              className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-2xl bg-white/[0.03] border border-white/[0.05] text-[clamp(8px,0.9vw,9px)] font-black text-[var(--vz-text-secondary)]/30 hover:text-[var(--vz-accent-vibrant)]/70 hover:border-[var(--vz-accent-vibrant)]/15 transition-colors cursor-pointer shrink-0"
             >
-              <Sparkles size={10} />
-              Config
+              <Sparkles size={10} className="w-[clamp(10px,1vw,12px)] h-[clamp(10px,1vw,12px)]" />
+              <span className="hidden xs:inline">Config</span>
             </motion.button>
           </div>
         </div>
