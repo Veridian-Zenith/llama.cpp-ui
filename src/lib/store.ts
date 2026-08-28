@@ -335,6 +335,20 @@ export const useStore = create<AppState>((set, get) => ({
 
     abortController = new AbortController();
     const signal = abortController.signal;
+    const streamStart = Date.now();
+    const estPromptTokens = apiMessages.reduce((a, m) => a + Math.ceil(m.content.length / 3.5), 0);
+    set({
+      streamingStats: {
+        ...get().streamingStats,
+        promptTokens: estPromptTokens,
+        generationTokens: 0,
+        totalTokens: estPromptTokens,
+        promptMs: 0,
+        generationMs: 0,
+        generationTokensPerSecond: 0,
+        promptTokensPerSecond: 0,
+      },
+    });
 
     try {
       let fullContent = '';
@@ -357,6 +371,24 @@ export const useStore = create<AppState>((set, get) => ({
 
         if (contentDelta) {
           fullContent += contentDelta;
+        }
+
+        // Live TPS — update every token chunk (dynamic, not just final timings)
+        if (contentDelta || reasoningDelta) {
+          const elapsed = Date.now() - streamStart;
+          const estGen = Math.ceil(fullContent.length / 3.8) + Math.ceil(fullReasoning.length / 3.8);
+          const tps = elapsed > 300 ? estGen / (elapsed / 1000) : get().streamingStats.generationTokensPerSecond;
+          if (elapsed % 150 < 50 || contentDelta) {
+            set({
+              streamingStats: {
+                ...get().streamingStats,
+                generationTokens: estGen,
+                totalTokens: estPromptTokens + estGen,
+                generationMs: elapsed,
+                generationTokensPerSecond: tps,
+              },
+            });
+          }
         }
 
         // Handle native tool calls from the streaming response

@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { AnimatePresence, motion, MotionConfig } from 'framer-motion';
 import { TopBar } from './components/TopBar';
 import { BottomBar } from './components/BottomBar';
@@ -15,11 +15,13 @@ const Assistant = lazy(() => import('./components/Assistant').then(m => ({ defau
 export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(false);
+
   const connect = useStore((state) => state.connect);
   const settings = useStore((state) => state.settings);
   const chats = useStore((state) => state.chats);
   const switchChat = useStore((state) => state.switchChat);
   const terminalOpen = useStore((state) => state.terminalOpen);
+  const didConnect = useRef(false);
 
   useEffect(() => {
     if (window.innerWidth < 768) setSidebarOpen(false);
@@ -27,14 +29,17 @@ export default function App() {
     if (savedAtmo) document.documentElement.classList.add(savedAtmo);
   }, []);
 
+
   useEffect(() => {
+    if (didConnect.current) return;
+    didConnect.current = true;
     connect(settings.serverUrl);
     const savedId = localStorage.getItem('llamacpp-active-chat');
     if (savedId && chats.find((c) => c.id === savedId)) {
       switchChat(savedId);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Run only on mount
+  }, []); // Run only on mount — guarded for StrictMode double-invoke
 
   const prefersReduced = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   return (
@@ -140,10 +145,12 @@ export default function App() {
         )}
       </AnimatePresence>
 
+
       {/* Floating assistant */}
       <Suspense fallback={null}>
         <Assistant />
       </Suspense>
+
     </div>
     </MotionConfig>
   );

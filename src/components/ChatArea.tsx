@@ -72,7 +72,7 @@ export function ChatArea({ onOpenPanel: _onOpenPanel }: Props) {
               <div className="bg-[var(--vz-card-bg)] rounded-3xl border border-[var(--vz-card-border)] p-[clamp(12px,2vw,20px)] backdrop-blur-sm shadow-[0_0_15px_var(--vz-shadow-color)]">
                 <div className="text-[clamp(9px,1vw,10px)] font-mono text-primary-themeable/60 uppercase tracking-[0.2em] mb-3">Quick Start</div>
                 <div className="bg-[var(--vz-bg-primary)] rounded-xl p-3 font-mono text-[clamp(10px,1.1vw,11px)] text-green-400/70 border border-green-500/10 break-all">
-                  <span className="text-green-400/40">$</span> llama-server --model ~/model.gguf -ngl 10 -c 76800 -fa on --host 0.0.0.0 --port 9972
+                  <span className="text-green-400/40">$</span> {"llama-server --model ~/model.gguf -ngl 10 -c " + (serverCapabilities?.contextSize || 32768) + " -fa on --host 0.0.0.0 --port 9972"}
                 </div>
                 <p className="text-[clamp(10px,1vw,11px)] text-[var(--vz-text-secondary)]/35 mt-2 font-mono">Then open Settings and click Connect</p>
               </div>

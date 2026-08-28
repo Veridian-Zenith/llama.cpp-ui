@@ -86,19 +86,21 @@ export function MarkdownRenderer({ content }: { content: string }) {
           <div
             key={i}
             className="prose prose-invert prose-sm max-w-none
-              prose-p:text-[var(--vz-text-secondary)] prose-p:leading-relaxed
-              prose-headings:text-[var(--vz-accent-vibrant)] prose-headings:font-bold
-              prose-h1:text-lg prose-h2:text-base prose-h3:text-sm
-              prose-a:text-[var(--vz-accent-vibrant)] prose-a:no-underline hover:prose-a:underline
-              prose-strong:text-[var(--vz-accent-vibrant)]
-              prose-code:text-[var(--vz-accent-vibrant)] prose-code:bg-[var(--vz-bg-secondary)] prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-xs prose-code:font-mono prose-code:before:content-none prose-code:after:content-none
-              prose-pre:bg-[var(--vz-bg-secondary)] prose-pre:border prose-pre:border-[var(--vz-border-color)] prose-pre:rounded-xl
-              prose-blockquote:border-[var(--vz-accent-vibrant)]/30 prose-blockquote:text-[var(--vz-text-secondary)]/70
-              prose-li:text-[var(--vz-text-secondary)]
-              prose-table:border-[var(--vz-border-color)]
-              prose-th:text-[var(--vz-accent-vibrant)]/80 prose-th:text-xs
-              prose-td:text-[var(--vz-text-secondary)] prose-td:text-xs
-              prose-hr:border-[var(--vz-border-color)]"
+              prose-p:text-[var(--vz-text-secondary)] prose-p:leading-[1.7] prose-p:my-2
+              prose-headings:text-[var(--vz-text-secondary)] prose-headings:font-black prose-headings:tracking-tight
+              prose-h1:text-[clamp(18px,2vw,20px)] prose-h1:mb-2 prose-h2:text-[clamp(16px,1.8vw,18px)] prose-h3:text-[clamp(14px,1.5vw,16px)]
+              prose-a:text-[var(--vz-accent-vibrant)] prose-a:underline decoration-[var(--vz-accent-vibrant)]/30 underline-offset-4 hover:decoration-[var(--vz-accent-vibrant)] prose-a:transition-colors
+              prose-strong:text-[var(--vz-text-secondary)] prose-strong:font-bold
+              prose-em:text-[var(--vz-text-secondary)]/80 prose-em:italic
+              prose-code:text-[var(--vz-accent-vibrant)] prose-code:bg-[var(--vz-bg-tertiary)] prose-code:border prose-code:border-[var(--vz-border-color)]/50 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md prose-code:text-[11px] prose-code:font-mono prose-code:font-medium prose-code:before:content-none prose-code:after:content-none
+              prose-pre:bg-[var(--vz-bg-tertiary)] prose-pre:border prose-pre:border-[var(--vz-border-color)]/50 prose-pre:rounded-xl prose-pre:shadow-[0_0_20px_rgba(0,0,0,0.3)] prose-pre:my-3
+              prose-blockquote:border-l-2 prose-blockquote:border-[var(--vz-accent-vibrant)]/40 prose-blockquote:bg-[var(--vz-accent-vibrant)]/[0.03] prose-blockquote:py-2 prose-blockquote:px-3 prose-blockquote:rounded-r-lg prose-blockquote:text-[var(--vz-text-secondary)]/70 prose-blockquote:italic prose-blockquote:my-2
+              prose-ul:my-2 prose-ol:my-2 prose-li:text-[var(--vz-text-secondary)] prose-li:my-0.5 prose-li:marker:text-[var(--vz-accent-vibrant)]/50
+              prose-table:border prose-table:border-[var(--vz-border-color)]/50 prose-table:rounded-lg prose-table:overflow-hidden prose-table:my-3
+              prose-th:bg-[var(--vz-bg-tertiary)] prose-th:text-[var(--vz-accent-vibrant)]/80 prose-th:text-[11px] prose-th:font-bold prose-th:uppercase prose-th:tracking-wider prose-th:px-3 prose-th:py-2
+              prose-td:text-[var(--vz-text-secondary)] prose-td:text-xs prose-td:px-3 prose-td:py-1.5 prose-td:border-t prose-td:border-[var(--vz-border-color)]/30
+              prose-hr:border-[var(--vz-border-color)]/30 prose-hr:my-4
+              prose-img:rounded-xl prose-img:border prose-img:border-[var(--vz-border-color)]/30 prose-img:shadow-lg"
           >
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}

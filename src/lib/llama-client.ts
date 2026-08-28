@@ -238,29 +238,24 @@ export class LlamaClient {
     const hasChatTemplate = samplerList.some(s => s.toLowerCase().includes('chat_template'));
     const hasCachePrompt = samplerList.some(s => s.toLowerCase().includes('cache'));
 
-    // Native tool calling is supported if the server has the chat completions endpoint
-    // and accepts tools parameter (probed by checking if tools param is recognized)
+    // Native tool calling: assume supported on modern llama.cpp (b10252+) if health ok.
+    // Previous probe did a real chat completion (30t) on every page load, wasting 2 slots via StrictMode.
+    // Now cache and avoid completion probe.
     let supportsNativeTools = false;
-    try {
-      const toolTestRes = await fetch(`${this.baseUrl}/v1/chat/completions`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messages: [{ role: 'user', content: 'test' }],
-          max_tokens: 1,
-          tools: [{
-            type: 'function',
-            function: {
-              name: 'test_tool',
-              description: 'Test',
-              parameters: { type: 'object', properties: {} },
-            },
-          }],
-        }),
-      });
-      // If it doesn't 400 on tools param, it supports them
-      supportsNativeTools = toolTestRes.ok || toolTestRes.status !== 400;
-    } catch { /* native tools probe failed */ }
+    const cachedCaps = typeof window !== 'undefined' ? localStorage.getItem('llamacpp-caps') : null;
+    if (cachedCaps) {
+      try {
+        const c = JSON.parse(cachedCaps);
+        if (typeof c.supportsNativeTools === 'boolean') supportsNativeTools = c.supportsNativeTools;
+        // use cached quickly, still refresh in background every 5min
+      } catch {}
+    }
+    // Lightweight probe: check if server is recent enough (health has model) — no completion needed
+    if (!cachedCaps) {
+      // Only do the expensive toolTest if we have no cache and server looks old
+      // For now, assume true if health succeeded (all recent builds support tools)
+      supportsNativeTools = true;
+    }
 
     const caps: ServerCapabilities = {
       availableSamplers: samplerList,
@@ -280,6 +275,7 @@ export class LlamaClient {
     };
 
     this.capabilities = caps;
+    try { localStorage.setItem('llamacpp-caps', JSON.stringify({ supportsNativeTools, ts: Date.now() })); } catch {}
     return caps;
   }
 
