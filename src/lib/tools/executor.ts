@@ -8,6 +8,8 @@ import { memoryStore } from '../memory';
 import { getDiagnostics, getSymbols, formatCode } from '../lsp/client';
 import { getLanguageForFile } from '../lsp/servers';
 import { profileStore } from '../profile';
+import { getTerminalUrl } from '../config';
+import { bakedExec } from '../terminal-baked';
 
 export async function executeTool(
   call: ToolCall,
@@ -134,7 +136,7 @@ async function fileRead(
   }
 
   try {
-    const res = await fetch(`http://127.0.0.1:8081/read`, {
+    const res = await fetch(`${getTerminalUrl()}/read`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ path, offset, limit }),
@@ -147,7 +149,14 @@ async function fileRead(
     const data = await res.json();
     return { output: data.content || '(empty file)' };
   } catch {
-    return { output: '', error: 'Terminal server not available for file operations' };
+    try {
+      const stored = localStorage.getItem(`vz-file:${path}`);
+      if (stored !== null) {
+        const lines = stored.split('\n');
+        return { output: lines.slice(offset, offset + limit).join('\n') || '(empty file)' };
+      }
+    } catch {}
+    return { output: '', error: 'File read: sidecar not available in static hosting (try local dev). Baked fallback checked localStorage.' };
   }
 }
 
@@ -164,7 +173,7 @@ async function fileWrite(
   }
 
   try {
-    const res = await fetch(`http://127.0.0.1:8081/write`, {
+    const res = await fetch(`${getTerminalUrl()}/write`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ path, content }),
@@ -177,7 +186,12 @@ async function fileWrite(
     const data = await res.json();
     return { output: data.message || `Written to ${path}` };
   } catch {
-    return { output: '', error: 'Terminal server not available for file operations' };
+    try {
+      localStorage.setItem(`vz-file:${path}`, content);
+      return { output: `Baked: stored ${content.length} chars to ${path} (localStorage, static hosting)` };
+    } catch {
+      return { output: '', error: 'File write: sidecar not available in static hosting' };
+    }
   }
 }
 
@@ -210,7 +224,7 @@ async function codeRun(
   }
 
   try {
-    const res = await fetch('http://127.0.0.1:8081/exec', {
+    const res = await fetch(`${getTerminalUrl()}/exec`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ command, shell: 'fish', timeout }),
@@ -229,7 +243,11 @@ async function codeRun(
     }
     return { output: parts.join('\n') || '(no output)' };
   } catch {
-    return { output: '', error: 'Terminal server not available for code execution' };
+    const baked = await bakedExec(command);
+    const parts: string[] = [];
+    if (baked.stdout) parts.push(baked.stdout);
+    if (baked.stderr) parts.push(baked.stderr);
+    return { output: parts.join('\n') || '(no output)', error: baked.exit_code !== 0 ? baked.stderr : undefined };
   }
 }
 
@@ -272,7 +290,7 @@ async function webSummarize(args: { url: string; max_length?: number }): Promise
   const { url, max_length = 2000 } = args;
 
   try {
-    const res = await fetch('http://127.0.0.1:8081/fetch', {
+    const res = await fetch(`${getTerminalUrl()}/fetch`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ url }),
@@ -291,7 +309,15 @@ async function webSummarize(args: { url: string; max_length?: number }): Promise
 
     return { output: content };
   } catch {
-    return { output: '', error: 'Failed to fetch URL' };
+    try {
+      const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
+      if (!r.ok) return { output: '', error: `Fetch failed: ${r.status}` };
+      let txt = await r.text();
+      if (txt.length > max_length) txt = txt.slice(0, max_length) + '\n[truncated]';
+      return { output: txt };
+    } catch (e) {
+      return { output: '', error: `Failed to fetch URL (baked fallback): ${e}` };
+    }
   }
 }
 

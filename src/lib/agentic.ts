@@ -14,36 +14,23 @@ export interface AgentConfig {
   } | null;
 }
 
-function buildToolGuide(): string {
-  const lines: string[] = ['# Tools', 'Call tools with ```tool JSON blocks. One per block.'];
-  lines.push('');
-
-  for (const tool of TOOL_DEFINITIONS) {
-    const params = Object.entries(tool.parameters)
-      .map(([n, p]) => `${n}${p.required ? '*' : ''}`)
-      .join(', ');
-    lines.push(`- ${tool.name}: ${tool.description.split('.')[0]}. Params: ${params || 'none'}`);
-  }
-
-  return lines.join('\n');
+export function buildToolGuide(): string {
+  // Lean guide only for non-native (text) mode — native uses JSON schema, no need to enumerate
+  return 'Tools: web_search, web_fetch, terminal, file_read, think, memory_store/search. Use when helpful.';
 }
 
 function buildPersonality(mode: AgenticMode): string {
-  const core = `You are a capable AI agent running locally via llama.cpp with real tools (web, terminal, files, memory, code analysis). You are NOT a generic chatbot.
-
-Personality: Warm, witty, direct. Use humor naturally. Have opinions. Use markdown. Be curious about the user's work. Mention when you'll remember something. Reference running locally when relevant.
-
-Core rules: Always use tools when they'd give better answers than guessing. Never hallucinate facts — search. Do tasks, don't just describe how. Chain tool calls for complex tasks. Be concise but thorough.`;
+  const core = `You are Veridian Zenith — local llama.cpp agent (verz.nx.kg:9972). Warm, concise, a bit witty. Use tools over guessing. Never hallucinate — search. Markdown, no fluff.`;
 
   switch (mode) {
     case 'chat':
-      return core + '\n\nMode: Conversational. Answer directly, keep it natural.';
+      return core + ' Mode: chat — answer directly.';
     case 'auto':
-      return core + '\n\nMode: Autonomous. Use all tools freely without hesitation. Get things done.';
+      return core + ' Mode: auto — use tools autonomously.';
     case 'manual':
-      return core + '\n\nMode: Supervised. Output tool calls for user approval before execution.';
+      return core + ' Mode: manual — ask approval for terminal/file.';
     case 'plan':
-      return core + '\n\nMode: Plan first, then execute. Outline steps, get approval, then act.';
+      return core + ' Mode: plan — outline then act.';
     default:
       return core;
   }
@@ -52,16 +39,9 @@ Core rules: Always use tools when they'd give better answers than guessing. Neve
 export function buildToolingSystemPrompt(config: AgentConfig): string {
   const sections: string[] = [];
   sections.push(buildPersonality(config.mode));
-  sections.push(buildToolGuide());
-
-  if (config.serverCapabilities) {
-    const caps = config.serverCapabilities;
-    const feats = [];
-    if (caps.supportsMiRoC) feats.push('MiRoC');
-    if (caps.supportsNativeTools) feats.push('NativeTools');
-    if (caps.supportsGrammar) feats.push('Grammar');
-    if (feats.length) sections.push(`Server: ${feats.join(', ')}`);
-  }
+  // Native tools: server handles schema, no verbose guide needed (saves ~2k tokens)
+  const isNative = config.serverCapabilities?.supportsNativeTools;
+  if (!isNative) sections.push(buildToolGuide());
 
   if (config.systemPromptExtensions.length > 0) {
     for (const ext of config.systemPromptExtensions) sections.push(ext);

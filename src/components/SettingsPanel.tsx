@@ -145,7 +145,7 @@ export function SettingsPanel({ onClose }: Props) {
                   <label className="text-[10px] font-mono text-[var(--vz-text-secondary)]/40 uppercase tracking-wider">Server URL</label>
                   <input
                     type="text" value={urlInput} onChange={(e) => setUrlInput(e.target.value)}
-                    placeholder="http://127.0.0.1:8080"
+                    placeholder="https://verz.nx.kg:9972"
                     className="w-full bg-[var(--vz-bg-primary)] border border-[var(--vz-border-color)]/40 rounded-lg px-3 py-2.5 text-xs font-mono text-[var(--vz-text-secondary)] placeholder:text-[var(--vz-accent-muted)]/15 outline-none focus:border-[var(--vz-accent-vibrant)]/50 focus:shadow-[0_0_15px_rgba(255,45,45,0.1)] transition-all"
                   />
                   <motion.button

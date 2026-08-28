@@ -1,5 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, MotionConfig } from 'framer-motion';
 import { TopBar } from './components/TopBar';
 import { BottomBar } from './components/BottomBar';
 import { LeftPanel } from './components/LeftPanel';
@@ -36,7 +36,9 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Run only on mount
 
+  const prefersReduced = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   return (
+    <MotionConfig reducedMotion={prefersReduced ? 'always' : 'never'}>
     <div className="h-screen flex flex-col bg-[var(--vz-bg-primary)] text-[var(--vz-text-secondary)] overflow-hidden relative">
       <BackgroundEffect />
 
@@ -143,5 +145,6 @@ export default function App() {
         <Assistant />
       </Suspense>
     </div>
+    </MotionConfig>
   );
 }

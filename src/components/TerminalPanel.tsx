@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Terminal as TerminalIcon, X, ChevronRight, Trash2 } from 'lucide-react';
+import { getTerminalUrl } from '../lib/config';
+import { bakedExec } from '../lib/terminal-baked';
 
 interface TerminalLine {
   type: 'input' | 'output' | 'error';
@@ -41,7 +43,7 @@ export function TerminalPanel({ isOpen, onClose }: Props) {
     setIsRunning(true);
 
     try {
-      const res = await fetch('http://127.0.0.1:8081/exec', {
+      const res = await fetch(`${getTerminalUrl()}/exec`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ command: cmd, shell: 'auto', timeout: 30000 }),
@@ -76,10 +78,17 @@ export function TerminalPanel({ isOpen, onClose }: Props) {
         ]);
       }
     } catch (e) {
-      setLines((prev) => [
-        ...prev,
-        { type: 'error', content: `Connection failed: ${e}`, timestamp: Date.now() },
-      ]);
+      try {
+        const baked = await bakedExec(cmd);
+        if (baked.stdout) setLines((p) => [...p, { type: 'output', content: baked.stdout!, timestamp: Date.now() }]);
+        if (baked.stderr) setLines((p) => [...p, { type: 'error', content: baked.stderr!, timestamp: Date.now() }]);
+        if (!baked.stdout && !baked.stderr) setLines((p) => [...p, { type: 'output', content: '(no output — baked)', timestamp: Date.now() }]);
+      } catch {
+        setLines((prev) => [
+          ...prev,
+          { type: 'error', content: `Connection failed: ${e}`, timestamp: Date.now() },
+        ]);
+      }
     } finally {
       setIsRunning(false);
     }

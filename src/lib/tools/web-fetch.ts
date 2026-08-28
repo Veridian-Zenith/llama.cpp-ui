@@ -1,6 +1,7 @@
 import type { ToolResult } from './types';
+import { getTerminalUrl } from '../config';
 
-const PROXY_URL = 'http://127.0.0.1:8081';
+
 
 export async function webFetch(args: {
   url: string;
@@ -16,7 +17,7 @@ export async function webFetch(args: {
   }
 
   try {
-    const res = await fetch(`${PROXY_URL}/fetch`, {
+    const res = await fetch(`${getTerminalUrl()}/fetch`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ url: targetUrl, max_length }),
@@ -37,9 +38,17 @@ export async function webFetch(args: {
       metadata: { url: targetUrl, length: data.content.length },
     };
   } catch (e) {
-    return {
-      output: '',
-      error: `Fetch error: ${e}. Is the terminal server running? (bun run server/terminal-server.ts)`,
-    };
+    try {
+      const r = await fetch(targetUrl, { signal: AbortSignal.timeout(8000) });
+      if (!r.ok) return { output: '', error: `Fetch error: ${e}. Baked direct fetch failed: ${r.status}` };
+      let txt = await r.text();
+      if (txt.length > max_length) txt = txt.slice(0, max_length) + '\n[truncated]';
+      return { output: `Content from ${targetUrl} (baked):\n\n${txt}`, metadata: { url: targetUrl, length: txt.length } };
+    } catch (err) {
+      return {
+        output: '',
+        error: `Fetch error: ${e}. Baked fallback failed: ${err}`,
+      };
+    }
   }
 }

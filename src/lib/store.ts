@@ -3,7 +3,7 @@ import { LlamaClient, type ChatMessage, type CompletionRequest, type ServerCapab
 import { type ToolCall, type SandboxConfig, getToolByName } from './tools/types';
 import { DEFAULT_SANDBOX } from './tools/types';
 import { executeTool } from './tools/executor';
-import { buildToolingSystemPrompt, type AgenticMode } from './agentic';
+import { buildToolGuide, type AgenticMode } from './agentic';
 import { type PersonalityMode, buildPersonalityPrompt } from './personality';
 import { chatStore, type ChatConversation } from './chat-store';
 import { profileStore } from './profile';
@@ -289,19 +289,14 @@ export const useStore = create<AppState>((set, get) => ({
     // Auto-extract memories from user message
     memoryStore.autoExtract(content, chatId);
 
-    // Build system prompt with personality, tools, memory, and personalization
-    let systemPrompt = settings.systemPrompt;
+    // Build system prompt lean — single personality source, no duplication
+    let systemPrompt =
+      buildPersonalityPrompt(
+        settings.personalityMode,
+        settings.personalityMode === 'custom' ? settings.systemPrompt : undefined
+      ) || settings.systemPrompt;
 
-    // Inject personality mode
-    const personalityPrompt = buildPersonalityPrompt(
-      settings.personalityMode,
-      settings.personalityMode === 'custom' ? settings.systemPrompt : undefined
-    );
-    if (personalityPrompt) {
-      systemPrompt = personalityPrompt;
-    }
-
-    // Inject personalization
+    // Inject personalization (name, persona)
     systemPrompt = profileStore.buildPersonalizedSystemPrompt(systemPrompt);
 
     // Inject memory context relevant to the current message
@@ -310,14 +305,9 @@ export const useStore = create<AppState>((set, get) => ({
       systemPrompt += '\n\n' + memoryContext;
     }
 
-    if (agenticMode !== 'chat') {
-      const toolPrompt = buildToolingSystemPrompt({
-        mode: agenticMode,
-        maxToolCalls: 10,
-        systemPromptExtensions: [],
-        serverCapabilities: get().serverCapabilities,
-      });
-      systemPrompt = systemPrompt + '\n\n' + toolPrompt;
+    // Lean tool guide only when not native (native uses JSON schema, saves ~2k tokens)
+    if (agenticMode !== 'chat' && !get().serverCapabilities?.supportsNativeTools) {
+      systemPrompt += '\n\n' + buildToolGuide();
     }
 
     const apiMessages: ChatMessage[] = [

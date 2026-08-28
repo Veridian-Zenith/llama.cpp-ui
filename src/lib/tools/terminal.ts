@@ -1,6 +1,8 @@
 import type { ToolResult, SandboxConfig } from './types';
+import { getTerminalUrl } from '../config';
+import { bakedExec } from '../terminal-baked';
 
-const TERMINAL_SERVER = 'http://127.0.0.1:8081';
+
 
 export async function terminalExec(args: {
   command: string;
@@ -22,7 +24,7 @@ export async function terminalExec(args: {
   }
 
   try {
-    const res = await fetch(`${TERMINAL_SERVER}/exec`, {
+    const res = await fetch(`${getTerminalUrl()}/exec`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ command, shell, cwd, timeout }),
@@ -53,9 +55,16 @@ export async function terminalExec(args: {
       },
     };
   } catch (e) {
-    return {
-      output: '',
-      error: `Terminal connection failed. Is the terminal server running?\nStart it with: bun run server/terminal-server.ts\nError: ${e}`,
-    };
+    try {
+      const baked = await bakedExec(command);
+      const out = baked.stdout + (baked.stderr ? `\n${baked.stderr}` : '');
+      if (baked.exit_code === 0) return { output: out || '(no output)', metadata: { exit_code: 0, baked: true } };
+      return { output: out || '(no output)', error: baked.stderr ? undefined : `Baked fallback: ${e}` };
+    } catch {
+      return {
+        output: '',
+        error: `Terminal connection failed. Is the terminal server running?\nStart it with: bun run server/terminal-server.ts\nError: ${e}`,
+      };
+    }
   }
 }

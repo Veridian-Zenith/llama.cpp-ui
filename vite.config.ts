@@ -9,8 +9,9 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/api': {
-        target: 'http://127.0.0.1:8080',
+        target: 'https://verz.nx.kg:9972',
         changeOrigin: true,
+        secure: false,
       },
     },
   },
@@ -21,6 +22,7 @@ export default defineConfig({
       output: {
         manualChunks(id) {
           if (id.includes('node_modules')) {
+            if (id.includes('firebase')) return 'firebase'
             if (id.includes('framer-motion')) return 'framer'
             if (
               id.includes('highlight.js') ||

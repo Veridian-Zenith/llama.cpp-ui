@@ -1,7 +1,8 @@
 import type { LSPDiagnostic, LSPCompletionItem, LSPSymbolInfo } from './servers';
 import { getLanguageForFile } from './servers';
+import { getTerminalUrl } from '../config';
 
-const TERMINAL_SERVER = 'http://127.0.0.1:8081';
+
 
 export interface LSPResult {
   success: boolean;
@@ -16,7 +17,7 @@ export interface LSPResult {
  */
 async function lspRequest(endpoint: string, body: Record<string, unknown>): Promise<LSPResult> {
   try {
-    const res = await fetch(`${TERMINAL_SERVER}/lsp/${endpoint}`, {
+    const res = await fetch(`${getTerminalUrl()}/lsp/${endpoint}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
