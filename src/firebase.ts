@@ -4,20 +4,21 @@ import { getAnalytics } from "firebase/analytics";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
-// Your web app's Firebase configuration
+// Your web app's Firebase configuration — via Vite env (see .env.example)
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: "AIzaSyBLaaMmwsw9ovJWHXBtMm8AQGp2wfFPHXw",
-  authDomain: "main-website-ba2da.firebaseapp.com",
-  projectId: "main-website-ba2da",
-  storageBucket: "main-website-ba2da.firebasestorage.app",
-  messagingSenderId: "602404282468",
-  appId: "1:602404282468:web:44cd92321992e570793f71",
-  measurementId: "G-M95PQ9YG43"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+// Initialize Firebase — skip if env not set (e.g. local dev without .env)
+const app = firebaseConfig.apiKey ? initializeApp(firebaseConfig as never) : (null as never);
 // @ts-ignore - analytics initialized for side-effect, used by Firebase
-const analytics = getAnalytics(app);
+const analytics = app ? getAnalytics(app) : null;
 void analytics;
+export { app };
