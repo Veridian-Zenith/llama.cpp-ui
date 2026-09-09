@@ -45,13 +45,13 @@ export async function bakedExec(command: string): Promise<BakedResult> {
     return { stdout: 'Artifacts:\n  chats\n  memories\n  profile\n  verz.nx.kg:9972 (llama)\n  127.0.0.1:8081 (sidecar, local only)', exit_code: 0 };
   }
   if (lower === 'pwd') return { stdout: '/vz/llamacpp-ui', exit_code: 0 };
-  if (lower === 'whoami') return { stdout: 'guest@vz-ai • Veridian Zenith', exit_code: 0 };
+  if (lower === 'whoami') return { stdout: 'guest@vz-ai • Speki', exit_code: 0 };
   if (lower === 'date') return { stdout: new Date().toString(), exit_code: 0 };
   if (lower === 'uname -a' || lower === 'uname') return { stdout: 'Linux verz 6.8.0-zenith #1 SMP PREEMPT_DYNAMIC x86_64 GNU/Linux', exit_code: 0 };
   if (lower === 'neofetch') {
     return {
       stdout: [
-        '  /\\   OS: Veridian Zenith OS (static)',
+        '  /\\   OS: Speki OS (static)',
         ' /  \\  Host: vz-ai.web.app',
         '/____\\ Uptime: ephemeral',
         '|    | Shell: baked-sh',
